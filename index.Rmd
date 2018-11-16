@@ -1,6 +1,6 @@
 ---
 title: "My Website"
-author: "Your Name"
+author: "Uma Gaffney"
 date: "Last updated on `r Sys.Date()`"
 output:
   html_document:
@@ -21,6 +21,7 @@ Hello, Website!
 
 ```{r}
 library(ggplot2)
+library(fivethirtyeight)
 ggplot(mtcars, aes(x=cyl, y= mpg)) +
   geom_point() +
   labs(x= "Number of cylinders", y = "Miles per gallon")
@@ -30,5 +31,17 @@ ggplot(mtcars, aes(x=cyl, y= mpg)) +
 # My second section
 
 ```{r}
-head(mtcars)
+library(tidyverse)
+library(ggplot2)
+library(fivethirtyeight)
+library(maps)
+
+us_state_map <- map_data("state") %>%
+  as_data_frame()
+police_killings %>%
+  filter(state != "HI", state != "AK") %>%
+  ggplot(aes(x = longitude, y = latitude))+ 
+  geom_path(data = us_state_map, aes(x = long, y = lat, group = group), size = 0.1) +
+  geom_point(aes(col = raceethnicity), size = 3, alpha = 0.3) +
+  ggtitle("Police Killings in America by Race")
 ```
