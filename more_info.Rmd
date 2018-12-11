@@ -1,5 +1,5 @@
 ---
-title: "My Final Project"
+title: "More information"
 author: "Guy Incognito"
 date: "Last updated on `r Sys.Date()`"
 output:
@@ -16,4 +16,4 @@ Comments in HTML are like this!
 
 # SECTION NAME
 
-Write your blog post here.
+Write your "more information" section here.

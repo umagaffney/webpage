@@ -14,12 +14,12 @@ output:
     self_contained: no
 # All fa icons were obtained from https://fontawesome.com/icons?d=gallery
 navbar:
-  title: "My Website"
+  title: "Final Project Title"
   left:
-    - text: "Home"
+    - text: "Blogpost"
       href: index.html
-    - text: "About"
-      href: about.html
-  right:
-    - icon: fa-slack fa-lg
-      href: https://2018-fall-sds-albert.slack.com/
+    - text: "More info"
+      href: more_info.html
+#  right:
+#    - icon: fa-slack fa-lg
+#      href: https://2018-fall-sds-albert.slack.com/
