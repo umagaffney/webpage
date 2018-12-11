@@ -1,6 +1,6 @@
 ---
-title: "More information"
-author: "Guy Incognito"
+title: "Where Title VI Fails"
+author: "Uma Gaffney, Cecilia Mendez, and Belise"
 date: "Last updated on `r Sys.Date()`"
 output:
   html_document:
@@ -8,12 +8,99 @@ output:
     toc_depth: 2
     toc_float: true
     df_print: kable
+    code_folding: hide
 ---
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Set R Markdown chunk defaults:
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE, 
+  fig.width = 16/2, fig.height = 9/2
+)
+```
 
-<!--
-Comments in HTML are like this! 
--->
+```{r}
+library(tidyverse)
+library(readr)
+library(leaflet)
+SCH_truncated <- read_csv("SCH_truncated.csv")
+CRDCdistricts <- read_csv("CRDC2013_14_LEA.csv")
+maths20112012 <- read_csv("maths20112012.csv")
+rla20112012 <- read_csv("rla20112012.csv")
 
-# SECTION NAME
+SCH_demo <- SCH_truncated%>% 
+  select(1:5, 8:10, 27:33, 62:77) %>%
+  mutate(HI = SCH_ENR_HI_M + SCH_ENR_HI_F) %>%
+  mutate(AM = SCH_ENR_AM_M + SCH_ENR_AM_F) %>%
+  mutate(AS = SCH_ENR_AS_M + SCH_ENR_AS_F) %>%
+  mutate(BL = SCH_ENR_BL_M + SCH_ENR_BL_F) %>%
+  mutate(HP = SCH_ENR_HP_M + SCH_ENR_HP_F) %>%
+  mutate(WH = SCH_ENR_WH_M + SCH_ENR_WH_F) %>%
+  mutate(TR = SCH_ENR_TR_M + SCH_ENR_TR_F) %>%
+  mutate(TOT = TOT_ENR_M + TOT_ENR_F) %>%
+  mutate(HIprop = HI / TOT) %>%
+  mutate(BLprop = BL / TOT) %>%
+  mutate(WHprop = WH / TOT) %>%
+  mutate(HIBLprop = (HI + BL) / TOT) %>%
+  mutate(minprop = (HI + AM + BL) / TOT) %>%
+  mutate(segregated = ifelse(minprop > .75, TRUE, FALSE))
 
-Write your "more information" section here.
+LEA_demo <- SCH_demo %>%
+  group_by(LEAID) %>%
+  summarize(HI = sum(HI), 
+            AM = sum(AM), 
+            AS = sum(AS), 
+            BL = sum(BL), 
+            HP = sum(HP), 
+            WH = sum(WH), 
+            TR = sum(TR),
+            TOT = sum(TOT)) %>%
+  mutate(HIprop = HI / TOT) %>%
+  mutate(BLprop = BL / TOT) %>%
+  mutate(WHprop = WH / TOT) %>%
+  mutate(HIBLprop = (HI + BL) / TOT) %>%
+  mutate(minprop = (HI + AM + BL) / TOT) %>%
+  mutate(mindis = ifelse(minprop > .75, TRUE, FALSE))
+#convert district ID to character (necessary for joining)
+LEA_demo$LEAID<- as.character(LEA_demo$LEAID)
+
+
+#make the scores numeric; really annoying that this is necessary
+maths20112012$ALL_MTH00pctprof_1112 <- as.numeric(maths20112012$ALL_MTH00pctprof_1112)
+maths20112012$MWH_MTH00pctprof_1112 <- as.numeric(maths20112012$MWH_MTH00pctprof_1112)
+maths20112012$MHI_MTH00pctprof_1112 <- as.numeric(maths20112012$MHI_MTH00pctprof_1112)
+maths20112012$MBL_MTH00pctprof_1112 <- as.numeric(maths20112012$MBL_MTH00pctprof_1112)
+
+
+rla20112012$ALL_RLA00pctprof_1112 <- as.numeric(rla20112012$ALL_RLA00pctprof_1112)
+rla20112012$MWH_RLA00pctprof_1112 <- as.numeric(rla20112012$MWH_RLA00pctprof_1112)
+rla20112012$MHI_RLA00pctprof_1112 <- as.numeric(rla20112012$MHI_RLA00pctprof_1112)
+rla20112012$MBL_RLA00pctprof_1112 <- as.numeric(rla20112012$MBL_RLA00pctprof_1112)
+
+#join wrangled demographic data to district civil rights and district scores data
+joined_districts <- CRDCdistricts %>%
+  left_join(maths20112012, by = "LEAID") %>%
+  left_join(LEA_demo, by = "LEAID") %>%
+  left_join(rla20112012, by = "LEAID")
+```
+
+# Segregated Districts in America
+
+According to the Department of Education's Civil Rights data, approximately 20,000 of the nearly 100,000 schools that accept federal funding are more than 75% underprivileged minorities. Of those 20,000 schools, almost 13,000 of them, or about 65%, are in districts that are also more than 75% minority. Because the schools in these districts are generally similar in terms of ethnic breakdown, less than 400 segregated schools and just 11 segregated districts have a formal desegregation order or plan in place. Yet the remaining districts are in need of just as much or more help.
+
+# Outcomes for Segregated Districts
+
+```{r}
+
+#scores by what % district is black or hispanic
+joined_districts %>%
+  filter(LEA_CRCOORD_RAC_IND != "-5") %>%
+  ggplot(aes(x = HIBLprop, y = ALL_MTH00pctprof_1112, color = LEA_DESEGPLAN)) + 
+  scale_x_continuous(limits = c(0, 1)) +
+  geom_point() + 
+  theme_classic()
+
+joined_districts %>%
+  filter(mindis != "NA") %>%
+  ggplot(aes(x = HIBLprop, y = MBL_RLA00pctprof_1112)) + geom_boxplot()
+```
+

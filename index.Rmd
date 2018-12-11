@@ -1,6 +1,6 @@
 ---
-title: "My Final Project"
-author: "Uma Gaffney"
+title: "Where Title VI Fails"
+author: "Uma Gaffney, Cecilia Mendez, and Belise"
 date: "Last updated on `r Sys.Date()`"
 output:
   html_document:
@@ -8,12 +8,89 @@ output:
     toc_depth: 2
     toc_float: true
     df_print: kable
+    code_folding: hide
 ---
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+# Set R Markdown chunk defaults:
+knitr::opts_chunk$set(
+  echo = TRUE, message = FALSE, warning = FALSE, 
+  fig.width = 16/2, fig.height = 9/2
+)
+```
 
 <!--
 Comments in HTML are like this! 
 -->
 
-# SECTION NAME
+# Title VI and School Segregation
 
-Write your blog post here.
+The text of Title VI of the Civil Rights Act of 1964 reads as follows:
+
+> No person in the United States shall, on the ground of race, color, or national origin, be excluded from participation in, be denied the benefits of, or be subjected to discrimination under any program or activity receiving Federal financial assistance.^[“Education and Title VI.” Office for Civil Rights, US Department of Education (ED), 25 Sept. 2018, www2.ed.gov/about/offices/list/ocr/docs/hq43e4.html.]
+
+Title VI is used to enforce anti-segregation and discrimination policies in the nearly 17,000 districts nationally that accept federal funding. School segregation, as a result, seems like an outdated civil rights issue, and one that is no longer relevant. However, there are still many federally funded schools in the United States where more than 75% of students are disadvantaged ethnic minorities, and therefore would be considered segregated schools.^[U.S. GAO. “Better Use of Information Could Help Agencies Identify Disparities and Address Racial Discrimination.” K-12 Education, U.S. Government Accountability Office, 17 May 2016, www.gao.gov/products/GAO-16-345.] 
+
+In the first half of the 20th century, segregation existed within school districts and schools for white students were invariably superior in terms of academics, funding, and structural integrity.^[“A Century of Racial Segregation, 1849–1950.” "With an Even Hand" : Brown v. Board at Fifty, Library of Congress, 13 Nov. 2004, www.loc.gov/exhibits/brown/brown-segregation.html.] In this century, however, Title VI is sufficiently well-enforced that deliberate segregation is growing more uncommon. Instead, residential segregation ensures that every school in a district has mostly black and/or Hispanic students. Some of this segregation is deliberate, as district lines are drawn around minority neighborhoods^[Reeves, Richard V., et al. “How School District Boundaries Can Create More Segregated Schools.” Brookings, The Brookings Institution, 21 Nov. 2017, www.brookings.edu/blog/social-mobility-memos/2017/11/20/how-school-district-boundaries-can-create-more-segregated-schools/.
+], but in most cases it is the simple result of race correlating with income. The result can be seen in the interactive map below, where each marker represents a federally-funded school, and the color indicates what percent of the school is an underprivileged minority.
+
+```{r}
+#load packages
+library(tidyverse)
+library(readr)
+library(leaflet)
+
+#load needed data for this page
+SCH_truncated <- read_csv("SCH_truncated.csv")
+
+#data wrangling
+#selecting out key columns
+#combining gender categories to find enrollment by race
+#creating variables for certain proportions including overall minority
+#creating a variable for segregated schools with > 75% minority population
+SCH_demo <- SCH_truncated%>% 
+  select(1:5, 8:10, 27:33, 62:77) %>%
+  mutate(HI = SCH_ENR_HI_M + SCH_ENR_HI_F) %>%
+  mutate(AM = SCH_ENR_AM_M + SCH_ENR_AM_F) %>%
+  mutate(AS = SCH_ENR_AS_M + SCH_ENR_AS_F) %>%
+  mutate(BL = SCH_ENR_BL_M + SCH_ENR_BL_F) %>%
+  mutate(HP = SCH_ENR_HP_M + SCH_ENR_HP_F) %>%
+  mutate(WH = SCH_ENR_WH_M + SCH_ENR_WH_F) %>%
+  mutate(TR = SCH_ENR_TR_M + SCH_ENR_TR_F) %>%
+  mutate(TOT = TOT_ENR_M + TOT_ENR_F) %>%
+  mutate(HIprop = HI / TOT) %>%
+  mutate(BLprop = BL / TOT) %>%
+  mutate(WHprop = WH / TOT) %>%
+  mutate(HIBLprop = (HI + BL) / TOT) %>%
+  mutate(minprop = (HI + AM + BL + HP) / TOT) %>%
+  mutate(segregated = ifelse(minprop > .75, TRUE, FALSE))
+
+
+# replace all non UTF-8 character strings with an empty space (otherwise there's an error)
+SCH_demo$SCH_NAME <-
+  iconv( x = SCH_demo$SCH_NAME
+         , from = "UTF-8"
+         , to = "UTF-8"
+         , sub = "" )
+
+#create color palette for map
+pal <- colorNumeric(
+  palette = "Blues",
+  domain = 0:100)
+#create interactive map showing each school with color indicating percent minority
+SCH_demo %>%
+  filter(minprop >= 0 & minprop <=1) %>%
+  leaflet() %>%
+  setView(-100, 40, 4.25) %>%
+  addTiles() %>%
+  addCircleMarkers(
+    ~CCD_LONCOD, 
+    ~CCD_LATCOD, 
+    radius = 4, 
+    stroke = FALSE, 
+    color = ~pal(minprop * 100), 
+    label = ~SCH_NAME, 
+    popup = ~as.character(round(minprop, digits = 3) * 100),
+    fillOpacity = 1)%>%
+  addLegend(pal = pal, values = 0:100, position = "bottomleft")
+```
+We used Civil Rights data collected at the school and district level by the Department of Education through their Office for Civil Rights^[“Civil Rights Data.” Office for Civil Rights, US Department of Education (ED), 25 Sept. 2018, www2.ed.gov/about/offices/list/ocr/data.html.] and test scores on state reading and math assessments collected on the district level by the Department of Education through their ED*facts* initiative^[“ED Data Express.” ED.gov, The Department of Education, eddataexpress.ed.gov/.] to examine how prevalent segregation by district is, and what effect it has on student outcomes.
