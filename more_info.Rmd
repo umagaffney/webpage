@@ -24,11 +24,10 @@ library(readr)
 library(leaflet)
 SCH_truncated <- read_csv("SCH_truncated.csv")
 CRDCdistricts <- read_csv("CRDC2013_14_LEA.csv")
-maths20112012 <- read_csv("maths20112012.csv")
 rla20112012 <- read_csv("rla20112012.csv")
 
-SCH_demo <- SCH_truncated%>% 
-  select(1:5, 8:10, 27:33, 62:77) %>%
+LEA_demo <- SCH_truncated%>% 
+  select(1:5, 8:10, 27:ncol(SCH_truncated)) %>%
   mutate(HI = SCH_ENR_HI_M + SCH_ENR_HI_F) %>%
   mutate(AM = SCH_ENR_AM_M + SCH_ENR_AM_F) %>%
   mutate(AS = SCH_ENR_AS_M + SCH_ENR_AS_F) %>%
@@ -37,14 +36,6 @@ SCH_demo <- SCH_truncated%>%
   mutate(WH = SCH_ENR_WH_M + SCH_ENR_WH_F) %>%
   mutate(TR = SCH_ENR_TR_M + SCH_ENR_TR_F) %>%
   mutate(TOT = TOT_ENR_M + TOT_ENR_F) %>%
-  mutate(HIprop = HI / TOT) %>%
-  mutate(BLprop = BL / TOT) %>%
-  mutate(WHprop = WH / TOT) %>%
-  mutate(HIBLprop = (HI + BL) / TOT) %>%
-  mutate(minprop = (HI + AM + BL) / TOT) %>%
-  mutate(segregated = ifelse(minprop > .75, TRUE, FALSE))
-
-LEA_demo <- SCH_demo %>%
   group_by(LEAID) %>%
   summarize(HI = sum(HI), 
             AM = sum(AM), 
@@ -59,18 +50,15 @@ LEA_demo <- SCH_demo %>%
   mutate(WHprop = WH / TOT) %>%
   mutate(HIBLprop = (HI + BL) / TOT) %>%
   mutate(minprop = (HI + AM + BL) / TOT) %>%
-  mutate(mindis = ifelse(minprop > .75, TRUE, FALSE))
-#convert district ID to character (necessary for joining)
-LEA_demo$LEAID<- as.character(LEA_demo$LEAID)
+  mutate(mindis = ifelse(minprop > .75, "Segregated", "Not Segregated"))
+
+#The LEAID variable for CRDCdistricts and rla20112012 start with a leading 0
+#follwoing code removes the 0
+CRDCdistricts$LEAID <- as.integer(CRDCdistricts$LEAID)
+rla20112012$LEAID <- as.integer(rla20112012$LEAID)
 
 
 #make the scores numeric; really annoying that this is necessary
-maths20112012$ALL_MTH00pctprof_1112 <- as.numeric(maths20112012$ALL_MTH00pctprof_1112)
-maths20112012$MWH_MTH00pctprof_1112 <- as.numeric(maths20112012$MWH_MTH00pctprof_1112)
-maths20112012$MHI_MTH00pctprof_1112 <- as.numeric(maths20112012$MHI_MTH00pctprof_1112)
-maths20112012$MBL_MTH00pctprof_1112 <- as.numeric(maths20112012$MBL_MTH00pctprof_1112)
-
-
 rla20112012$ALL_RLA00pctprof_1112 <- as.numeric(rla20112012$ALL_RLA00pctprof_1112)
 rla20112012$MWH_RLA00pctprof_1112 <- as.numeric(rla20112012$MWH_RLA00pctprof_1112)
 rla20112012$MHI_RLA00pctprof_1112 <- as.numeric(rla20112012$MHI_RLA00pctprof_1112)
@@ -78,7 +66,6 @@ rla20112012$MBL_RLA00pctprof_1112 <- as.numeric(rla20112012$MBL_RLA00pctprof_111
 
 #join wrangled demographic data to district civil rights and district scores data
 joined_districts <- CRDCdistricts %>%
-  left_join(maths20112012, by = "LEAID") %>%
   left_join(LEA_demo, by = "LEAID") %>%
   left_join(rla20112012, by = "LEAID")
 ```
@@ -94,13 +81,53 @@ According to the Department of Education's Civil Rights data, approximately 20,0
 #scores by what % district is black or hispanic
 joined_districts %>%
   filter(LEA_CRCOORD_RAC_IND != "-5") %>%
-  ggplot(aes(x = HIBLprop, y = ALL_MTH00pctprof_1112, color = LEA_DESEGPLAN)) + 
-  scale_x_continuous(limits = c(0, 1)) +
+  ggplot(aes(x = HIBLprop, y = ALL_RLA00pctprof_1112 / 100, color = LEA_DESEGPLAN)) + 
+  scale_x_continuous(limits = c(0, 1), labels = scales::percent) +
+  scale_y_continuous(labels = scales::percent) +
   geom_point() + 
-  theme_classic()
+  theme_minimal() +
+  scale_color_manual(values=c("#56B4E9", "orange")) +
+  labs(x = "Black and Hispanic District Enrollment", y = "Percentage of Students at Proficiency Level in Reading", color = "Formal Desegregation Plan")
+
+
+joined_districts %>%
+  filter(LEA_STATE == "TX" | LEA_STATE == "NY" | LEA_STATE == "CA") %>%
+  ggplot(aes(x = mindis, fill = mindis, y = ALL_RLA00pctprof_1112 / 100)) + 
+  geom_boxplot() + 
+  facet_wrap(~LEA_STATE) + 
+  theme_minimal() + 
+  scale_fill_brewer(palette = "Set3") +
+  labs(x = "District Enrollment Over 75% Underprivileged Minority (Segregated)", 
+       y = "Percentage of Students at Proficiency Level in Reading", 
+       fill = "") +
+  scale_y_continuous(labels = scales::percent)
 
 joined_districts %>%
   filter(mindis != "NA") %>%
-  ggplot(aes(x = HIBLprop, y = MBL_RLA00pctprof_1112)) + geom_boxplot()
+  select(LEAID, 
+         HIBLprop, 
+         mindis, 
+         ALL_RLA00pctprof_1112, 
+         MWH_RLA00pctprof_1112, 
+         MBL_RLA00pctprof_1112, 
+         MHI_RLA00pctprof_1112) %>%
+  gather(key = "ethnicity", value = "RLA00pctprof_1112", 4:7) %>%
+  ggplot(aes(x = ethnicity, fill = ethnicity, y = RLA00pctprof_1112 / 100)) + 
+  facet_wrap(~mindis) + 
+  geom_boxplot() + 
+  labs( y = "Percentage of Students at Proficiency Level in Reading", 
+        fill = "Student Race / Ethnicity", 
+        x = "") + 
+  scale_y_continuous(labels = scales::percent) +
+  scale_fill_brewer(palette = "Set2", 
+                    labels = c("All",  "Black", "Hispanic", "White")) +
+  theme_minimal() +
+  theme(axis.text.x = element_blank())
+
+
+
+
+
+
 ```
 
