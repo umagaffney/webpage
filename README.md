@@ -1,4 +1,4 @@
-# My personal webpage
+# SDS 192 Final Project
 
-This is the README file for the source code for my personal webpage. It can be found at <https://whoishomer.github.io/webpage/>.  
+This is the README file for the source code for my SDS 192 Final Project. It can be found at <https://umagaffney.github.io/webpage/>.  
 
