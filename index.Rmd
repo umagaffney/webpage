@@ -80,7 +80,8 @@ pal <- colorNumeric(
   domain = 0:100)
 #create interactive map showing each school with color indicating percent minority
 SCH_demo %>%
-  filter(minprop >= 0 & minprop <=1) %>%
+  #for some reason one school claims to be 400 % minority; we're filtering them out
+  filter(minprop <=1) %>%
   leaflet() %>%
   setView(-100, 40, 4.25) %>%
   addTiles() %>%

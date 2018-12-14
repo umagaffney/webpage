@@ -49,7 +49,7 @@ LEA_demo <- SCH_truncated%>%
   mutate(BLprop = BL / TOT) %>%
   mutate(WHprop = WH / TOT) %>%
   mutate(HIBLprop = (HI + BL) / TOT) %>%
-  mutate(minprop = (HI + AM + BL) / TOT) %>%
+  mutate(minprop = (HI + AM + BL + HP) / TOT) %>%
   mutate(mindis = ifelse(minprop > .75, "Segregated", "Not Segregated"))
 
 #The LEAID variable for CRDCdistricts and rla20112012 start with a leading 0
@@ -58,13 +58,13 @@ CRDCdistricts$LEAID <- as.integer(CRDCdistricts$LEAID)
 rla20112012$LEAID <- as.integer(rla20112012$LEAID)
 
 
-#make the scores numeric; really annoying that this is necessary
-rla20112012$ALL_RLA00pctprof_1112 <- as.numeric(rla20112012$ALL_RLA00pctprof_1112)
-rla20112012$MWH_RLA00pctprof_1112 <- as.numeric(rla20112012$MWH_RLA00pctprof_1112)
-rla20112012$MHI_RLA00pctprof_1112 <- as.numeric(rla20112012$MHI_RLA00pctprof_1112)
-rla20112012$MBL_RLA00pctprof_1112 <- as.numeric(rla20112012$MBL_RLA00pctprof_1112)
+#make the scores numeric; removes unneccessary text from some values 
+rla20112012$ALL_RLA00pctprof_1112 <- parse_number(rla20112012$ALL_RLA00pctprof_1112)
+rla20112012$MWH_RLA00pctprof_1112 <- parse_number(rla20112012$MWH_RLA00pctprof_1112)
+rla20112012$MHI_RLA00pctprof_1112 <- parse_number(rla20112012$MHI_RLA00pctprof_1112)
+rla20112012$MBL_RLA00pctprof_1112 <- parse_number(rla20112012$MBL_RLA00pctprof_1112)
 
-#join wrangled demographic data to district civil rights and district scores data
+#join district civil rights data to wrangled district demographic data and district scores data
 joined_districts <- CRDCdistricts %>%
   left_join(LEA_demo, by = "LEAID") %>%
   left_join(rla20112012, by = "LEAID")
@@ -74,22 +74,34 @@ joined_districts <- CRDCdistricts %>%
 
 According to the Department of Education's Civil Rights data, approximately 20,000 of the nearly 100,000 schools that accept federal funding are more than 75% underprivileged minorities. Of those 20,000 schools, almost 13,000 of them, or about 65%, are in districts that are also more than 75% minority. Because the schools in these districts are generally similar in terms of ethnic breakdown, less than 400 segregated schools and just 11 segregated districts have a formal desegregation order or plan in place. Yet the remaining districts are in need of just as much or more help.
 
-# Outcomes for Segregated Districts
+# Student Outcomes and District Demographics
+
+
 
 ```{r}
 
-#scores by what % district is black or hispanic
+#scatterplot showing overall reading proficiency by what % district is black or hispanic
 joined_districts %>%
-  filter(LEA_CRCOORD_RAC_IND != "-5") %>%
-  ggplot(aes(x = HIBLprop, y = ALL_RLA00pctprof_1112 / 100, color = LEA_DESEGPLAN)) + 
+  filter(LEA_DESEGPLAN != "-5") %>%
+  ggplot(aes(x = minprop, y = ALL_RLA00pctprof_1112 / 100, color = LEA_DESEGPLAN)) + 
   scale_x_continuous(limits = c(0, 1), labels = scales::percent) +
   scale_y_continuous(labels = scales::percent) +
-  geom_point() + 
+  geom_point(size = 1) + 
   theme_minimal() +
   scale_color_manual(values=c("#56B4E9", "orange")) +
-  labs(x = "Black and Hispanic District Enrollment", y = "Percentage of Students at Proficiency Level in Reading", color = "Formal Desegregation Plan")
+  labs(x = "Underprivileged Minority District Enrollment",
+       y = "Percentage of Students at Proficiency Level in Reading", 
+       color = "Formal Desegregation Plan",
+       title = "Reading Proficiency Relative to Minority Enrollment in Districts")
 
 
+```
+
+# Segregated Districts Across the Country
+
+```{r}
+#boxplot data for three states of interest
+#plot scores by segregated status and facet by state
 joined_districts %>%
   filter(LEA_STATE == "TX" | LEA_STATE == "NY" | LEA_STATE == "CA") %>%
   ggplot(aes(x = mindis, fill = mindis, y = ALL_RLA00pctprof_1112 / 100)) + 
@@ -99,11 +111,18 @@ joined_districts %>%
   scale_fill_brewer(palette = "Set3") +
   labs(x = "District Enrollment Over 75% Underprivileged Minority (Segregated)", 
        y = "Percentage of Students at Proficiency Level in Reading", 
-       fill = "") +
+       fill = "", 
+       title = "Relationship between District Segregation and Student Reading Level in Three States") +
   scale_y_continuous(labels = scales::percent)
+```
 
+
+# Who Hurts The Most
+
+```{r}
+#gather data by ethnicity so that scores can be compared across race
+#most rows will be empty (since many districts don't have black or hispanic students)
 joined_districts %>%
-  filter(mindis != "NA") %>%
   select(LEAID, 
          HIBLprop, 
          mindis, 
@@ -112,22 +131,19 @@ joined_districts %>%
          MBL_RLA00pctprof_1112, 
          MHI_RLA00pctprof_1112) %>%
   gather(key = "ethnicity", value = "RLA00pctprof_1112", 4:7) %>%
+  #plot this data race vs scores faceting by segregation
   ggplot(aes(x = ethnicity, fill = ethnicity, y = RLA00pctprof_1112 / 100)) + 
   facet_wrap(~mindis) + 
   geom_boxplot() + 
   labs( y = "Percentage of Students at Proficiency Level in Reading", 
         fill = "Student Race / Ethnicity", 
-        x = "") + 
+        x = "", 
+        title = "Reading Ability of Students by Race in Districts with Greater or Less than 75% Minority Enrollment") + 
   scale_y_continuous(labels = scales::percent) +
   scale_fill_brewer(palette = "Set2", 
                     labels = c("All",  "Black", "Hispanic", "White")) +
   theme_minimal() +
   theme(axis.text.x = element_blank())
-
-
-
-
-
 
 ```
 
