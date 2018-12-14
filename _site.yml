@@ -16,9 +16,9 @@ output:
 navbar:
   title: "Where Title VI Fails"
   left:
-    - text: "Blogpost"
+    - text: "Introduction"
       href: index.html
-    - text: "More info"
+    - text: "More Info"
       href: more_info.html
 #  right:
 #    - icon: fa-slack fa-lg
