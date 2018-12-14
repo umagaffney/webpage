@@ -27,52 +27,6 @@
 <script src="site_libs/navigation-1.1/codefolding.js"></script>
 
 
-<style type="text/css">code{white-space: pre;}</style>
-<style type="text/css">
-div.sourceCode { overflow-x: auto; }
-table.sourceCode, tr.sourceCode, td.lineNumbers, td.sourceCode {
-  margin: 0; padding: 0; vertical-align: baseline; border: none; }
-table.sourceCode { width: 100%; line-height: 100%; background-color: #f8f8f8; }
-td.lineNumbers { text-align: right; padding-right: 4px; padding-left: 4px; color: #aaaaaa; border-right: 1px solid #aaaaaa; }
-td.sourceCode { padding-left: 5px; }
-pre, code { background-color: #f8f8f8; }
-code > span.kw { color: #204a87; font-weight: bold; } /* Keyword */
-code > span.dt { color: #204a87; } /* DataType */
-code > span.dv { color: #0000cf; } /* DecVal */
-code > span.bn { color: #0000cf; } /* BaseN */
-code > span.fl { color: #0000cf; } /* Float */
-code > span.ch { color: #4e9a06; } /* Char */
-code > span.st { color: #4e9a06; } /* String */
-code > span.co { color: #8f5902; font-style: italic; } /* Comment */
-code > span.ot { color: #8f5902; } /* Other */
-code > span.al { color: #ef2929; } /* Alert */
-code > span.fu { color: #000000; } /* Function */
-code > span.er { color: #a40000; font-weight: bold; } /* Error */
-code > span.wa { color: #8f5902; font-weight: bold; font-style: italic; } /* Warning */
-code > span.cn { color: #000000; } /* Constant */
-code > span.sc { color: #000000; } /* SpecialChar */
-code > span.vs { color: #4e9a06; } /* VerbatimString */
-code > span.ss { color: #4e9a06; } /* SpecialString */
-code > span.im { } /* Import */
-code > span.va { color: #000000; } /* Variable */
-code > span.cf { color: #204a87; font-weight: bold; } /* ControlFlow */
-code > span.op { color: #ce5c00; font-weight: bold; } /* Operator */
-code > span.pp { color: #8f5902; font-style: italic; } /* Preprocessor */
-code > span.ex { } /* Extension */
-code > span.at { color: #c4a000; } /* Attribute */
-code > span.do { color: #8f5902; font-weight: bold; font-style: italic; } /* Documentation */
-code > span.an { color: #8f5902; font-weight: bold; font-style: italic; } /* Annotation */
-code > span.cv { color: #8f5902; font-weight: bold; font-style: italic; } /* CommentVar */
-code > span.in { color: #8f5902; font-weight: bold; font-style: italic; } /* Information */
-div.sourceCode {
-  overflow-x: visible;
-}
-</style>
-<style type="text/css">
-  pre:not([class]) {
-    background-color: white;
-  }
-</style>
 
 
 <style type="text/css">
@@ -345,111 +299,26 @@ div.tocify {
 
 <h1 class="title toc-ignore">Where Title VI Fails</h1>
 <h4 class="author"><em>Uma Gaffney, Cecilia Mendez, and Belise</em></h4>
-<h4 class="date"><em>Last updated on 2018-12-12</em></h4>
+<h4 class="date"><em>Last updated on 2018-12-13</em></h4>
 
 </div>
 
 
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(tidyverse)
-<span class="kw">library</span>(readr)
-<span class="kw">library</span>(leaflet)
-SCH_truncated &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;SCH_truncated.csv&quot;</span>)
-CRDCdistricts &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;CRDC2013_14_LEA.csv&quot;</span>)
-rla20112012 &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;rla20112012.csv&quot;</span>)
-
-LEA_demo &lt;-<span class="st"> </span>SCH_truncated<span class="op">%&gt;%</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">select</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>, <span class="dv">8</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">27</span><span class="op">:</span><span class="kw">ncol</span>(SCH_truncated)) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">HI =</span> SCH_ENR_HI_M <span class="op">+</span><span class="st"> </span>SCH_ENR_HI_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">AM =</span> SCH_ENR_AM_M <span class="op">+</span><span class="st"> </span>SCH_ENR_AM_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">AS =</span> SCH_ENR_AS_M <span class="op">+</span><span class="st"> </span>SCH_ENR_AS_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">BL =</span> SCH_ENR_BL_M <span class="op">+</span><span class="st"> </span>SCH_ENR_BL_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">HP =</span> SCH_ENR_HP_M <span class="op">+</span><span class="st"> </span>SCH_ENR_HP_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">WH =</span> SCH_ENR_WH_M <span class="op">+</span><span class="st"> </span>SCH_ENR_WH_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">TR =</span> SCH_ENR_TR_M <span class="op">+</span><span class="st"> </span>SCH_ENR_TR_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">TOT =</span> TOT_ENR_M <span class="op">+</span><span class="st"> </span>TOT_ENR_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">group_by</span>(LEAID) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">summarize</span>(<span class="dt">HI =</span> <span class="kw">sum</span>(HI), 
-            <span class="dt">AM =</span> <span class="kw">sum</span>(AM), 
-            <span class="dt">AS =</span> <span class="kw">sum</span>(AS), 
-            <span class="dt">BL =</span> <span class="kw">sum</span>(BL), 
-            <span class="dt">HP =</span> <span class="kw">sum</span>(HP), 
-            <span class="dt">WH =</span> <span class="kw">sum</span>(WH), 
-            <span class="dt">TR =</span> <span class="kw">sum</span>(TR),
-            <span class="dt">TOT =</span> <span class="kw">sum</span>(TOT)) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">HIprop =</span> HI <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">BLprop =</span> BL <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">WHprop =</span> WH <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">HIBLprop =</span> (HI <span class="op">+</span><span class="st"> </span>BL) <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">minprop =</span> (HI <span class="op">+</span><span class="st"> </span>AM <span class="op">+</span><span class="st"> </span>BL) <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mindis =</span> <span class="kw">ifelse</span>(minprop <span class="op">&gt;</span><span class="st"> </span>.<span class="dv">75</span>, <span class="st">&quot;Segregated&quot;</span>, <span class="st">&quot;Not Segregated&quot;</span>))
-
-<span class="co">#The LEAID variable for CRDCdistricts and rla20112012 start with a leading 0</span>
-<span class="co">#follwoing code removes the 0</span>
-CRDCdistricts<span class="op">$</span>LEAID &lt;-<span class="st"> </span><span class="kw">as.integer</span>(CRDCdistricts<span class="op">$</span>LEAID)
-rla20112012<span class="op">$</span>LEAID &lt;-<span class="st"> </span><span class="kw">as.integer</span>(rla20112012<span class="op">$</span>LEAID)
-
-
-<span class="co">#make the scores numeric; really annoying that this is necessary</span>
-rla20112012<span class="op">$</span>ALL_RLA00pctprof_<span class="dv">1112</span> &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(rla20112012<span class="op">$</span>ALL_RLA00pctprof_<span class="dv">1112</span>)
-rla20112012<span class="op">$</span>MWH_RLA00pctprof_<span class="dv">1112</span> &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(rla20112012<span class="op">$</span>MWH_RLA00pctprof_<span class="dv">1112</span>)
-rla20112012<span class="op">$</span>MHI_RLA00pctprof_<span class="dv">1112</span> &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(rla20112012<span class="op">$</span>MHI_RLA00pctprof_<span class="dv">1112</span>)
-rla20112012<span class="op">$</span>MBL_RLA00pctprof_<span class="dv">1112</span> &lt;-<span class="st"> </span><span class="kw">as.numeric</span>(rla20112012<span class="op">$</span>MBL_RLA00pctprof_<span class="dv">1112</span>)
-
-<span class="co">#join wrangled demographic data to district civil rights and district scores data</span>
-joined_districts &lt;-<span class="st"> </span>CRDCdistricts <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">left_join</span>(LEA_demo, <span class="dt">by =</span> <span class="st">&quot;LEAID&quot;</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">left_join</span>(rla20112012, <span class="dt">by =</span> <span class="st">&quot;LEAID&quot;</span>)</code></pre></div>
 <div id="segregated-districts-in-america" class="section level1">
 <h1>Segregated Districts in America</h1>
 <p>According to the Department of Education’s Civil Rights data, approximately 20,000 of the nearly 100,000 schools that accept federal funding are more than 75% underprivileged minorities. Of those 20,000 schools, almost 13,000 of them, or about 65%, are in districts that are also more than 75% minority. Because the schools in these districts are generally similar in terms of ethnic breakdown, less than 400 segregated schools and just 11 segregated districts have a formal desegregation order or plan in place. Yet the remaining districts are in need of just as much or more help.</p>
 </div>
-<div id="outcomes-for-segregated-districts" class="section level1">
-<h1>Outcomes for Segregated Districts</h1>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#scores by what % district is black or hispanic</span>
-joined_districts <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(LEA_CRCOORD_RAC_IND <span class="op">!=</span><span class="st"> &quot;-5&quot;</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> HIBLprop, <span class="dt">y =</span> ALL_RLA00pctprof_<span class="dv">1112</span> <span class="op">/</span><span class="st"> </span><span class="dv">100</span>, <span class="dt">color =</span> LEA_DESEGPLAN)) <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">labels =</span> scales<span class="op">::</span>percent) <span class="op">+</span>
-<span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> scales<span class="op">::</span>percent) <span class="op">+</span>
-<span class="st">  </span><span class="kw">geom_point</span>() <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">theme_minimal</span>() <span class="op">+</span>
-<span class="st">  </span><span class="kw">scale_color_manual</span>(<span class="dt">values=</span><span class="kw">c</span>(<span class="st">&quot;#56B4E9&quot;</span>, <span class="st">&quot;orange&quot;</span>)) <span class="op">+</span>
-<span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">&quot;Black and Hispanic District Enrollment&quot;</span>, <span class="dt">y =</span> <span class="st">&quot;Percentage of Students at Proficiency Level in Reading&quot;</span>, <span class="dt">color =</span> <span class="st">&quot;Formal Desegregation Plan&quot;</span>)</code></pre></div>
+<div id="student-outcomes-and-district-demographics" class="section level1">
+<h1>Student Outcomes and District Demographics</h1>
 <p><img src="more_info_files/figure-html/unnamed-chunk-3-1.png" width="768" /></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">joined_districts <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(LEA_STATE <span class="op">==</span><span class="st"> &quot;TX&quot;</span> <span class="op">|</span><span class="st"> </span>LEA_STATE <span class="op">==</span><span class="st"> &quot;NY&quot;</span> <span class="op">|</span><span class="st"> </span>LEA_STATE <span class="op">==</span><span class="st"> &quot;CA&quot;</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> mindis, <span class="dt">fill =</span> mindis, <span class="dt">y =</span> ALL_RLA00pctprof_<span class="dv">1112</span> <span class="op">/</span><span class="st"> </span><span class="dv">100</span>)) <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">geom_boxplot</span>() <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">facet_wrap</span>(<span class="op">~</span>LEA_STATE) <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">theme_minimal</span>() <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">scale_fill_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set3&quot;</span>) <span class="op">+</span>
-<span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">&quot;District Enrollment Over 75% Underprivileged Minority (Segregated)&quot;</span>, 
-       <span class="dt">y =</span> <span class="st">&quot;Percentage of Students at Proficiency Level in Reading&quot;</span>, 
-       <span class="dt">fill =</span> <span class="st">&quot;&quot;</span>) <span class="op">+</span>
-<span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> scales<span class="op">::</span>percent)</code></pre></div>
-<p><img src="more_info_files/figure-html/unnamed-chunk-3-2.png" width="768" /></p>
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r">joined_districts <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">filter</span>(mindis <span class="op">!=</span><span class="st"> &quot;NA&quot;</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">select</span>(LEAID, 
-         HIBLprop, 
-         mindis, 
-         ALL_RLA00pctprof_<span class="dv">1112</span>, 
-         MWH_RLA00pctprof_<span class="dv">1112</span>, 
-         MBL_RLA00pctprof_<span class="dv">1112</span>, 
-         MHI_RLA00pctprof_<span class="dv">1112</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">gather</span>(<span class="dt">key =</span> <span class="st">&quot;ethnicity&quot;</span>, <span class="dt">value =</span> <span class="st">&quot;RLA00pctprof_1112&quot;</span>, <span class="dv">4</span><span class="op">:</span><span class="dv">7</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> ethnicity, <span class="dt">fill =</span> ethnicity, <span class="dt">y =</span> RLA00pctprof_<span class="dv">1112</span> <span class="op">/</span><span class="st"> </span><span class="dv">100</span>)) <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">facet_wrap</span>(<span class="op">~</span>mindis) <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">geom_boxplot</span>() <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">labs</span>( <span class="dt">y =</span> <span class="st">&quot;Percentage of Students at Proficiency Level in Reading&quot;</span>, 
-        <span class="dt">fill =</span> <span class="st">&quot;Student Race / Ethnicity&quot;</span>, 
-        <span class="dt">x =</span> <span class="st">&quot;&quot;</span>) <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> scales<span class="op">::</span>percent) <span class="op">+</span>
-<span class="st">  </span><span class="kw">scale_fill_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set2&quot;</span>, 
-                    <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;All&quot;</span>,  <span class="st">&quot;Black&quot;</span>, <span class="st">&quot;Hispanic&quot;</span>, <span class="st">&quot;White&quot;</span>)) <span class="op">+</span>
-<span class="st">  </span><span class="kw">theme_minimal</span>() <span class="op">+</span>
-<span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_blank</span>())</code></pre></div>
-<p><img src="more_info_files/figure-html/unnamed-chunk-3-3.png" width="768" /></p>
+</div>
+<div id="segregated-districts-across-the-country" class="section level1">
+<h1>Segregated Districts Across the Country</h1>
+<p><img src="more_info_files/figure-html/unnamed-chunk-4-1.png" width="768" /></p>
+</div>
+<div id="who-hurts-the-most" class="section level1">
+<h1>Who Hurts The Most</h1>
+<p><img src="more_info_files/figure-html/unnamed-chunk-5-1.png" width="768" /></p>
 </div>
 
 
