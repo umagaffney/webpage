@@ -73,7 +73,7 @@ According to the Department of Education's Civil Rights data, approximately 20,0
 
 ## Student Outcomes and District Demographics
 
-Although we have established that many school districts in this country are heavily segregated, we have not yet established how this is a problem. Instead of looking at whether separate educational systems could ever be philosophically equal, we examined whether they were equal in terms of student outcomes. The plot below suggests that they are not. This graph shows for each school district in the country what percentage of students were considered proficient in reading and language skills based on their state’s assessment, compared to what percentage of the school district is minorities (In this study, we are considering black, Hispanic, Native American, and Pacific Islander students to be minorities, but not Asian students). Also marked are the few districts with a formal desegregation plan or order in place. As can be seen, the clear majority of districts with nearly 100% minority population have no formal desegregation order in place. A clear trend shows that as the district becomes less and less white, reading proficiency decreases. Therefore, we see that segregated districts are not performing equally to white districts and are not an acceptable option.
+Although we have established that many school districts in this country are heavily segregated, we have not yet established how this is a problem. Instead of looking at whether separate educational systems could ever be philosophically equal, we examined whether they were equal in terms of student outcomes. The plot below suggests that they are not. This graph shows for each school district in the country what percentage of students were considered proficient in reading and language skills based on their state's assessment, compared to what percentage of the school district is minorities (In this study, we are considering black, Hispanic, Native American, and Pacific Islander students to be minorities, but not Asian students). Also marked are the few districts with a formal desegregation plan or order in place. As can be seen, the clear majority of districts with nearly 100% minority population have no formal desegregation order in place. A clear trend shows that as the district becomes less and less white, reading proficiency decreases. Therefore, we see that segregated districts are not performing equally to white districts and are not an acceptable option.
 
 ```{r}
 
@@ -112,13 +112,14 @@ joined_districts %>%
        y = "Percentage of Students at Proficiency Level in Reading", 
        fill = "", 
        title = "Relationship between District Segregation and Student Reading Level in Three States") +
-  scale_y_continuous(labels = scales::percent)
+  scale_y_continuous(labels = scales::percent) +
+  theme(axis.text.x = element_blank())
 ```
 
 
 ## Who Hurts The Most
 
-Education inequality has skyrocketed over the years in this country. The Stanford Center for Education Policy Analysis released a study which found out that between 1990 and 2010, income segregation between school districts has increased by 15%.^[  Owens, Ann, et al. “Income Segregation Between Schools and School Districts.” American Educational Research Journal, vol. 53, no. 4, Aug. 2016, pp. 1159–1197, doi:10.3102/0002831216652722.] It is easy to look at the above graphics and think that only income, not race, affects the education of these students. However, the graphic below suggests otherwise. 
+Education inequality has skyrocketed over the years in this country. The Stanford Center for Education Policy Analysis released a study which found out that between 1990 and 2010, income segregation between school districts has increased by 15%.^[  Owens, Ann, et al. "Income Segregation Between Schools and School Districts."" American Educational Research Journal, vol. 53, no. 4, Aug. 2016, pp. 1159-1197, doi:10.3102/0002831216652722.] It is easy to look at the above graphics and think that only income, not race, affects the education of these students. However, the graphic below suggests otherwise. 
 The following boxplot shows the reading proficiency distribution for black, white, and Hispanic students in either segregated or unsegregated districts. As expected based on the prior analyses, all scores go down somewhat in segregated districts. Although the top half of black and Hispanic students do about the same or even a little better in segregated districts, the bottom 50% do notably worse. What is important to see, however, is that that although white students do much worse in segregated districts than in unsegregated, they still do better than their black and Hispanic classmates. These data suggest that even in the same district, white students are still somehow receiving a better education. 
 
 
