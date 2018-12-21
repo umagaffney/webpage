@@ -1,6 +1,6 @@
 ---
 title: "Where Title VI Fails"
-author: "Uma Gaffney, Cecilia Mendez, and Belise"
+author: "Uma Gaffney, Cecilia Mendez, and Belise Bwiza"
 date: "Last updated on `r Sys.Date()`"
 output:
   html_document:
@@ -19,37 +19,34 @@ knitr::opts_chunk$set(
 ```
 
 ```{r}
+#load packages
 library(tidyverse)
 library(readr)
 library(leaflet)
+#load data
 SCH_truncated <- read_csv("SCH_truncated.csv")
 CRDCdistricts <- read_csv("CRDC2013_14_LEA.csv")
 rla20112012 <- read_csv("rla20112012.csv")
 
+#data wrangling: combined male and female data for each race
 LEA_demo <- SCH_truncated%>% 
   select(1:5, 8:10, 27:ncol(SCH_truncated)) %>%
   mutate(HI = SCH_ENR_HI_M + SCH_ENR_HI_F) %>%
   mutate(AM = SCH_ENR_AM_M + SCH_ENR_AM_F) %>%
-  mutate(AS = SCH_ENR_AS_M + SCH_ENR_AS_F) %>%
   mutate(BL = SCH_ENR_BL_M + SCH_ENR_BL_F) %>%
   mutate(HP = SCH_ENR_HP_M + SCH_ENR_HP_F) %>%
-  mutate(WH = SCH_ENR_WH_M + SCH_ENR_WH_F) %>%
-  mutate(TR = SCH_ENR_TR_M + SCH_ENR_TR_F) %>%
   mutate(TOT = TOT_ENR_M + TOT_ENR_F) %>%
+  #summarize by district
   group_by(LEAID) %>%
   summarize(HI = sum(HI), 
             AM = sum(AM), 
-            AS = sum(AS), 
             BL = sum(BL), 
             HP = sum(HP), 
-            WH = sum(WH), 
-            TR = sum(TR),
             TOT = sum(TOT)) %>%
-  mutate(HIprop = HI / TOT) %>%
-  mutate(BLprop = BL / TOT) %>%
-  mutate(WHprop = WH / TOT) %>%
-  mutate(HIBLprop = (HI + BL) / TOT) %>%
+  #add variable for what percent minority (- asian) and whether it is greater than 75%
   mutate(minprop = (HI + AM + BL + HP) / TOT) %>%
+  #removing one weird outlier that claims to be 400% minority
+  filter(minprop <= 1) %>%
   mutate(mindis = ifelse(minprop > .75, "Segregated", "Not Segregated"))
 
 #The LEAID variable for CRDCdistricts and rla20112012 start with a leading 0
@@ -74,9 +71,9 @@ joined_districts <- CRDCdistricts %>%
 
 According to the Department of Education's Civil Rights data, approximately 20,000 of the nearly 100,000 schools that accept federal funding are more than 75% underprivileged minorities. Of those 20,000 schools, almost 13,000 of them, or about 65%, are in districts that are also more than 75% minority. Because the schools in these districts are generally similar in terms of ethnic breakdown, less than 400 segregated schools and just 11 segregated districts have a formal desegregation order or plan in place. Yet the remaining districts are in need of just as much or more help.
 
-# Student Outcomes and District Demographics
+## Student Outcomes and District Demographics
 
-
+Although we have established that many school districts in this country are heavily segregated, we have not yet established how this is a problem. Instead of looking at whether separate educational systems could ever be philosophically equal, we examined whether they were equal in terms of student outcomes. The plot below suggests that they are not. This graph shows for each school district in the country what percentage of students were considered proficient in reading and language skills based on their state’s assessment, compared to what percentage of the school district is minorities (In this study, we are considering black, Hispanic, Native American, and Pacific Islander students to be minorities, but not Asian students). Also marked are the few districts with a formal desegregation plan or order in place. As can be seen, the clear majority of districts with nearly 100% minority population have no formal desegregation order in place. A clear trend shows that as the district becomes less and less white, reading proficiency decreases. Therefore, we see that segregated districts are not performing equally to white districts and are not an acceptable option.
 
 ```{r}
 
@@ -84,11 +81,11 @@ According to the Department of Education's Civil Rights data, approximately 20,0
 joined_districts %>%
   filter(LEA_DESEGPLAN != "-5") %>%
   ggplot(aes(x = minprop, y = ALL_RLA00pctprof_1112 / 100, color = LEA_DESEGPLAN)) + 
-  scale_x_continuous(limits = c(0, 1), labels = scales::percent) +
+  scale_x_continuous(labels = scales::percent) +
   scale_y_continuous(labels = scales::percent) +
   geom_point(size = 1) + 
+  scale_color_brewer(palette = "Dark2") +
   theme_minimal() +
-  scale_color_manual(values=c("#56B4E9", "orange")) +
   labs(x = "Underprivileged Minority District Enrollment",
        y = "Percentage of Students at Proficiency Level in Reading", 
        color = "Formal Desegregation Plan",
@@ -97,7 +94,9 @@ joined_districts %>%
 
 ```
 
-# Segregated Districts Across the Country
+## Segregated Districts Across the Country
+
+One limitation of the above graph is that each state has its own testing method and standards, and they are very difficult to compare across states. As a result, we looked specifically at the distributions for reading proficiency in three large states across different regions in this country, and the results were astounding. In New York, and California, reading proficiency in segregated districts (defined as districts with 75% or greater minority enrollment) is so much lower than unsegregated districts that the middle 50% of the distributions barely overlap. High reading proficiencies in Texas suggest that testing may be different in that state, but even so, the gap between unsegregated and segregated districts is obvious.
 
 ```{r}
 #boxplot data for three states of interest
@@ -117,28 +116,33 @@ joined_districts %>%
 ```
 
 
-# Who Hurts The Most
+## Who Hurts The Most
+
+Education inequality has skyrocketed over the years in this country. The Stanford Center for Education Policy Analysis released a study which found out that between 1990 and 2010, income segregation between school districts has increased by 15%.^[  Owens, Ann, et al. “Income Segregation Between Schools and School Districts.” American Educational Research Journal, vol. 53, no. 4, Aug. 2016, pp. 1159–1197, doi:10.3102/0002831216652722.] It is easy to look at the above graphics and think that only income, not race, affects the education of these students. However, the graphic below suggests otherwise. 
+The following boxplot shows the reading proficiency distribution for black, white, and Hispanic students in either segregated or unsegregated districts. As expected based on the prior analyses, all scores go down somewhat in segregated districts. Although the top half of black and Hispanic students do about the same or even a little better in segregated districts, the bottom 50% do notably worse. What is important to see, however, is that that although white students do much worse in segregated districts than in unsegregated, they still do better than their black and Hispanic classmates. These data suggest that even in the same district, white students are still somehow receiving a better education. 
+
+
 
 ```{r}
 #gather data by ethnicity so that scores can be compared across race
 #most rows will be empty (since many districts don't have black or hispanic students)
 joined_districts %>%
   select(LEAID, 
-         HIBLprop, 
          mindis, 
          ALL_RLA00pctprof_1112, 
          MWH_RLA00pctprof_1112, 
          MBL_RLA00pctprof_1112, 
          MHI_RLA00pctprof_1112) %>%
-  gather(key = "ethnicity", value = "RLA00pctprof_1112", 4:7) %>%
+  gather(key = "ethnicity", value = "RLA00pctprof_1112", 3:6) %>%
   #plot this data race vs scores faceting by segregation
+  filter(mindis != "NA") %>%
   ggplot(aes(x = ethnicity, fill = ethnicity, y = RLA00pctprof_1112 / 100)) + 
   facet_wrap(~mindis) + 
   geom_boxplot() + 
   labs( y = "Percentage of Students at Proficiency Level in Reading", 
         fill = "Student Race / Ethnicity", 
         x = "", 
-        title = "Reading Ability of Students by Race in Districts with Greater or Less than 75% Minority Enrollment") + 
+        title = "Reading Ability of Students by Race in Segregated or Not Segregated Districts") + 
   scale_y_continuous(labels = scales::percent) +
   scale_fill_brewer(palette = "Set2", 
                     labels = c("All",  "Black", "Hispanic", "White")) +
@@ -147,3 +151,5 @@ joined_districts %>%
 
 ```
 
+# Redefining Title VI
+Half a century ago, Title VI made it illegal to discriminate against students in public schools on the basis of race or ethnicity. How is it possible, then, that the system that was created in a post-Title VI world still allows nearly 8.5 million students to attend school in segregated, underperforming districts? Other influential factors like geography and income have stratified our educational system, and neither of those will be easy to overcome. The first priority must be to aid struggling schools in these districts so that no children are penalized for where they were born or who their parents are. In the long term, Title VI must evolve so that, wherever possible, integration will cross district lines and students will be welcomed into diverse, thriving schools in districts all over the country. 

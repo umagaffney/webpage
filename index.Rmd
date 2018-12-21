@@ -1,6 +1,6 @@
 ---
 title: "Where Title VI Fails"
-author: "Uma Gaffney, Cecilia Mendez, and Belise"
+author: "Uma Gaffney, Cecilia Mendez, and Belise Bwiza"
 date: "Last updated on `r Sys.Date()`"
 output:
   html_document:
@@ -17,10 +17,6 @@ knitr::opts_chunk$set(
   fig.width = 16/2, fig.height = 9/2
 )
 ```
-
-<!--
-Comments in HTML are like this! 
--->
 
 # Title VI and School Segregation
 

@@ -9,7 +9,7 @@
 <meta name="generator" content="pandoc" />
 
 
-<meta name="author" content="Uma Gaffney, Cecilia Mendez, and Belise" />
+<meta name="author" content="Uma Gaffney, Cecilia Mendez, and Belise Bwiza" />
 
 
 <title>Where Title VI Fails</title>
@@ -344,43 +344,40 @@ div.tocify {
 
 
 <h1 class="title toc-ignore">Where Title VI Fails</h1>
-<h4 class="author"><em>Uma Gaffney, Cecilia Mendez, and Belise</em></h4>
-<h4 class="date"><em>Last updated on 2018-12-14</em></h4>
+<h4 class="author"><em>Uma Gaffney, Cecilia Mendez, and Belise Bwiza</em></h4>
+<h4 class="date"><em>Last updated on 2018-12-20</em></h4>
 
 </div>
 
 
-<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="kw">library</span>(tidyverse)
+<div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#load packages</span>
+<span class="kw">library</span>(tidyverse)
 <span class="kw">library</span>(readr)
 <span class="kw">library</span>(leaflet)
+<span class="co">#load data</span>
 SCH_truncated &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;SCH_truncated.csv&quot;</span>)
 CRDCdistricts &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;CRDC2013_14_LEA.csv&quot;</span>)
 rla20112012 &lt;-<span class="st"> </span><span class="kw">read_csv</span>(<span class="st">&quot;rla20112012.csv&quot;</span>)
 
+<span class="co">#data wrangling: combined male and female data for each race</span>
 LEA_demo &lt;-<span class="st"> </span>SCH_truncated<span class="op">%&gt;%</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">select</span>(<span class="dv">1</span><span class="op">:</span><span class="dv">5</span>, <span class="dv">8</span><span class="op">:</span><span class="dv">10</span>, <span class="dv">27</span><span class="op">:</span><span class="kw">ncol</span>(SCH_truncated)) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">HI =</span> SCH_ENR_HI_M <span class="op">+</span><span class="st"> </span>SCH_ENR_HI_F) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">AM =</span> SCH_ENR_AM_M <span class="op">+</span><span class="st"> </span>SCH_ENR_AM_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">AS =</span> SCH_ENR_AS_M <span class="op">+</span><span class="st"> </span>SCH_ENR_AS_F) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">BL =</span> SCH_ENR_BL_M <span class="op">+</span><span class="st"> </span>SCH_ENR_BL_F) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">HP =</span> SCH_ENR_HP_M <span class="op">+</span><span class="st"> </span>SCH_ENR_HP_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">WH =</span> SCH_ENR_WH_M <span class="op">+</span><span class="st"> </span>SCH_ENR_WH_F) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">TR =</span> SCH_ENR_TR_M <span class="op">+</span><span class="st"> </span>SCH_ENR_TR_F) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">TOT =</span> TOT_ENR_M <span class="op">+</span><span class="st"> </span>TOT_ENR_F) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="co">#summarize by district</span>
 <span class="st">  </span><span class="kw">group_by</span>(LEAID) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">summarize</span>(<span class="dt">HI =</span> <span class="kw">sum</span>(HI), 
             <span class="dt">AM =</span> <span class="kw">sum</span>(AM), 
-            <span class="dt">AS =</span> <span class="kw">sum</span>(AS), 
             <span class="dt">BL =</span> <span class="kw">sum</span>(BL), 
             <span class="dt">HP =</span> <span class="kw">sum</span>(HP), 
-            <span class="dt">WH =</span> <span class="kw">sum</span>(WH), 
-            <span class="dt">TR =</span> <span class="kw">sum</span>(TR),
             <span class="dt">TOT =</span> <span class="kw">sum</span>(TOT)) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">HIprop =</span> HI <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">BLprop =</span> BL <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">WHprop =</span> WH <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">mutate</span>(<span class="dt">HIBLprop =</span> (HI <span class="op">+</span><span class="st"> </span>BL) <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="co">#add variable for what percent minority (- asian) and whether it is greater than 75%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">minprop =</span> (HI <span class="op">+</span><span class="st"> </span>AM <span class="op">+</span><span class="st"> </span>BL <span class="op">+</span><span class="st"> </span>HP) <span class="op">/</span><span class="st"> </span>TOT) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="co">#removing one weird outlier that claims to be 400% minority</span>
+<span class="st">  </span><span class="kw">filter</span>(minprop <span class="op">&lt;=</span><span class="st"> </span><span class="dv">1</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">mutate</span>(<span class="dt">mindis =</span> <span class="kw">ifelse</span>(minprop <span class="op">&gt;</span><span class="st"> </span>.<span class="dv">75</span>, <span class="st">&quot;Segregated&quot;</span>, <span class="st">&quot;Not Segregated&quot;</span>))
 
 <span class="co">#The LEAID variable for CRDCdistricts and rla20112012 start with a leading 0</span>
@@ -402,26 +399,27 @@ joined_districts &lt;-<span class="st"> </span>CRDCdistricts <span class="op">%&
 <div id="segregated-districts-in-america" class="section level1">
 <h1>Segregated Districts in America</h1>
 <p>According to the Department of Education’s Civil Rights data, approximately 20,000 of the nearly 100,000 schools that accept federal funding are more than 75% underprivileged minorities. Of those 20,000 schools, almost 13,000 of them, or about 65%, are in districts that are also more than 75% minority. Because the schools in these districts are generally similar in terms of ethnic breakdown, less than 400 segregated schools and just 11 segregated districts have a formal desegregation order or plan in place. Yet the remaining districts are in need of just as much or more help.</p>
-</div>
-<div id="student-outcomes-and-district-demographics" class="section level1">
-<h1>Student Outcomes and District Demographics</h1>
+<div id="student-outcomes-and-district-demographics" class="section level2">
+<h2>Student Outcomes and District Demographics</h2>
+<p>Although we have established that many school districts in this country are heavily segregated, we have not yet established how this is a problem. Instead of looking at whether separate educational systems could ever be philosophically equal, we examined whether they were equal in terms of student outcomes. The plot below suggests that they are not. This graph shows for each school district in the country what percentage of students were considered proficient in reading and language skills based on their state’s assessment, compared to what percentage of the school district is minorities (In this study, we are considering black, Hispanic, Native American, and Pacific Islander students to be minorities, but not Asian students). Also marked are the few districts with a formal desegregation plan or order in place. As can be seen, the clear majority of districts with nearly 100% minority population have no formal desegregation order in place. A clear trend shows that as the district becomes less and less white, reading proficiency decreases. Therefore, we see that segregated districts are not performing equally to white districts and are not an acceptable option.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#scatterplot showing overall reading proficiency by what % district is black or hispanic</span>
 joined_districts <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">filter</span>(LEA_DESEGPLAN <span class="op">!=</span><span class="st"> &quot;-5&quot;</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> minprop, <span class="dt">y =</span> ALL_RLA00pctprof_<span class="dv">1112</span> <span class="op">/</span><span class="st"> </span><span class="dv">100</span>, <span class="dt">color =</span> LEA_DESEGPLAN)) <span class="op">+</span><span class="st"> </span>
-<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">limits =</span> <span class="kw">c</span>(<span class="dv">0</span>, <span class="dv">1</span>), <span class="dt">labels =</span> scales<span class="op">::</span>percent) <span class="op">+</span>
+<span class="st">  </span><span class="kw">scale_x_continuous</span>(<span class="dt">labels =</span> scales<span class="op">::</span>percent) <span class="op">+</span>
 <span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> scales<span class="op">::</span>percent) <span class="op">+</span>
 <span class="st">  </span><span class="kw">geom_point</span>(<span class="dt">size =</span> <span class="dv">1</span>) <span class="op">+</span><span class="st"> </span>
+<span class="st">  </span><span class="kw">scale_color_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Dark2&quot;</span>) <span class="op">+</span>
 <span class="st">  </span><span class="kw">theme_minimal</span>() <span class="op">+</span>
-<span class="st">  </span><span class="kw">scale_color_manual</span>(<span class="dt">values=</span><span class="kw">c</span>(<span class="st">&quot;#56B4E9&quot;</span>, <span class="st">&quot;orange&quot;</span>)) <span class="op">+</span>
 <span class="st">  </span><span class="kw">labs</span>(<span class="dt">x =</span> <span class="st">&quot;Underprivileged Minority District Enrollment&quot;</span>,
        <span class="dt">y =</span> <span class="st">&quot;Percentage of Students at Proficiency Level in Reading&quot;</span>, 
        <span class="dt">color =</span> <span class="st">&quot;Formal Desegregation Plan&quot;</span>,
        <span class="dt">title =</span> <span class="st">&quot;Reading Proficiency Relative to Minority Enrollment in Districts&quot;</span>)</code></pre></div>
 <p><img src="more_info_files/figure-html/unnamed-chunk-3-1.png" width="768" /></p>
 </div>
-<div id="segregated-districts-across-the-country" class="section level1">
-<h1>Segregated Districts Across the Country</h1>
+<div id="segregated-districts-across-the-country" class="section level2">
+<h2>Segregated Districts Across the Country</h2>
+<p>One limitation of the above graph is that each state has its own testing method and standards, and they are very difficult to compare across states. As a result, we looked specifically at the distributions for reading proficiency in three large states across different regions in this country, and the results were astounding. In New York, and California, reading proficiency in segregated districts (defined as districts with 75% or greater minority enrollment) is so much lower than unsegregated districts that the middle 50% of the distributions barely overlap. High reading proficiencies in Texas suggest that testing may be different in that state, but even so, the gap between unsegregated and segregated districts is obvious.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#boxplot data for three states of interest</span>
 <span class="co">#plot scores by segregated status and facet by state</span>
 joined_districts <span class="op">%&gt;%</span>
@@ -438,33 +436,45 @@ joined_districts <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> scales<span class="op">::</span>percent)</code></pre></div>
 <p><img src="more_info_files/figure-html/unnamed-chunk-4-1.png" width="768" /></p>
 </div>
-<div id="who-hurts-the-most" class="section level1">
-<h1>Who Hurts The Most</h1>
+<div id="who-hurts-the-most" class="section level2">
+<h2>Who Hurts The Most</h2>
+<p>Education inequality has skyrocketed over the years in this country. The Stanford Center for Education Policy Analysis released a study which found out that between 1990 and 2010, income segregation between school districts has increased by 15%.<a href="#fn1" class="footnoteRef" id="fnref1"><sup>1</sup></a> It is easy to look at the above graphics and think that only income, not race, affects the education of these students. However, the graphic below suggests otherwise. The following boxplot shows the reading proficiency distribution for black, white, and Hispanic students in either segregated or unsegregated districts. As expected based on the prior analyses, all scores go down somewhat in segregated districts. Although the top half of black and Hispanic students do about the same or even a little better in segregated districts, the bottom 50% do notably worse. What is important to see, however, is that that although white students do much worse in segregated districts than in unsegregated, they still do better than their black and Hispanic classmates. These data suggest that even in the same district, white students are still somehow receiving a better education.</p>
 <div class="sourceCode"><pre class="sourceCode r"><code class="sourceCode r"><span class="co">#gather data by ethnicity so that scores can be compared across race</span>
 <span class="co">#most rows will be empty (since many districts don&#39;t have black or hispanic students)</span>
 joined_districts <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">select</span>(LEAID, 
-         HIBLprop, 
          mindis, 
          ALL_RLA00pctprof_<span class="dv">1112</span>, 
          MWH_RLA00pctprof_<span class="dv">1112</span>, 
          MBL_RLA00pctprof_<span class="dv">1112</span>, 
          MHI_RLA00pctprof_<span class="dv">1112</span>) <span class="op">%&gt;%</span>
-<span class="st">  </span><span class="kw">gather</span>(<span class="dt">key =</span> <span class="st">&quot;ethnicity&quot;</span>, <span class="dt">value =</span> <span class="st">&quot;RLA00pctprof_1112&quot;</span>, <span class="dv">4</span><span class="op">:</span><span class="dv">7</span>) <span class="op">%&gt;%</span>
+<span class="st">  </span><span class="kw">gather</span>(<span class="dt">key =</span> <span class="st">&quot;ethnicity&quot;</span>, <span class="dt">value =</span> <span class="st">&quot;RLA00pctprof_1112&quot;</span>, <span class="dv">3</span><span class="op">:</span><span class="dv">6</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="co">#plot this data race vs scores faceting by segregation</span>
+<span class="st">  </span><span class="kw">filter</span>(mindis <span class="op">!=</span><span class="st"> &quot;NA&quot;</span>) <span class="op">%&gt;%</span>
 <span class="st">  </span><span class="kw">ggplot</span>(<span class="kw">aes</span>(<span class="dt">x =</span> ethnicity, <span class="dt">fill =</span> ethnicity, <span class="dt">y =</span> RLA00pctprof_<span class="dv">1112</span> <span class="op">/</span><span class="st"> </span><span class="dv">100</span>)) <span class="op">+</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">facet_wrap</span>(<span class="op">~</span>mindis) <span class="op">+</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">geom_boxplot</span>() <span class="op">+</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">labs</span>( <span class="dt">y =</span> <span class="st">&quot;Percentage of Students at Proficiency Level in Reading&quot;</span>, 
         <span class="dt">fill =</span> <span class="st">&quot;Student Race / Ethnicity&quot;</span>, 
         <span class="dt">x =</span> <span class="st">&quot;&quot;</span>, 
-        <span class="dt">title =</span> <span class="st">&quot;Reading Ability of Students by Race in Districts with Greater or Less than 75% Minority Enrollment&quot;</span>) <span class="op">+</span><span class="st"> </span>
+        <span class="dt">title =</span> <span class="st">&quot;Reading Ability of Students by Race in Segregated or Not Segregated Districts&quot;</span>) <span class="op">+</span><span class="st"> </span>
 <span class="st">  </span><span class="kw">scale_y_continuous</span>(<span class="dt">labels =</span> scales<span class="op">::</span>percent) <span class="op">+</span>
 <span class="st">  </span><span class="kw">scale_fill_brewer</span>(<span class="dt">palette =</span> <span class="st">&quot;Set2&quot;</span>, 
                     <span class="dt">labels =</span> <span class="kw">c</span>(<span class="st">&quot;All&quot;</span>,  <span class="st">&quot;Black&quot;</span>, <span class="st">&quot;Hispanic&quot;</span>, <span class="st">&quot;White&quot;</span>)) <span class="op">+</span>
 <span class="st">  </span><span class="kw">theme_minimal</span>() <span class="op">+</span>
 <span class="st">  </span><span class="kw">theme</span>(<span class="dt">axis.text.x =</span> <span class="kw">element_blank</span>())</code></pre></div>
 <p><img src="more_info_files/figure-html/unnamed-chunk-5-1.png" width="768" /></p>
+</div>
+</div>
+<div id="redefining-title-vi" class="section level1">
+<h1>Redefining Title VI</h1>
+<p>Half a century ago, Title VI made it illegal to discriminate against students in public schools on the basis of race or ethnicity. How is it possible, then, that the system that was created in a post-Title VI world still allows nearly 8.5 million students to attend school in segregated, underperforming districts? Other influential factors like geography and income have stratified our educational system, and neither of those will be easy to overcome. The first priority must be to aid struggling schools in these districts so that no children are penalized for where they were born or who their parents are. In the long term, Title VI must evolve so that, wherever possible, integration will cross district lines and students will be welcomed into diverse, thriving schools in districts all over the country.</p>
+</div>
+<div class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>Owens, Ann, et al. “Income Segregation Between Schools and School Districts.” American Educational Research Journal, vol. 53, no. 4, Aug. 2016, pp. 1159–1197, <a href="doi:10.3102/0002831216652722" class="uri">doi:10.3102/0002831216652722</a>.<a href="#fnref1">↩</a></p></li>
+</ol>
 </div>
 
 
